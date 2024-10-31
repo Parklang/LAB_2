@@ -52,12 +52,6 @@ default.size.stdout \
 OBJDUMP_LIST += \
 lab-2-vxl.list \
 
-OBJCOPY_HEX += \
-lab-2-vxl.hex \
-
-OBJCOPY_BIN += \
-lab-2-vxl.bin \
-
 
 # All Target
 all: main-build
@@ -81,22 +75,12 @@ lab-2-vxl.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-lab-2-vxl.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "lab-2-vxl.hex"
-	@echo 'Finished building: $@'
-	@echo ' '
-
-lab-2-vxl.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "lab-2-vxl.bin"
-	@echo 'Finished building: $@'
-	@echo ' '
-
 # Other Targets
 clean:
-	-$(RM) default.size.stdout lab-2-vxl.bin lab-2-vxl.elf lab-2-vxl.hex lab-2-vxl.list lab-2-vxl.map
+	-$(RM) default.size.stdout lab-2-vxl.elf lab-2-vxl.list lab-2-vxl.map
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
