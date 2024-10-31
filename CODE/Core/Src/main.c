@@ -43,7 +43,7 @@
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t display_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -56,7 +56,54 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+const uint8_t segments[10] = {
+    0x3F, // 0
+    0x06, // 1
+    0x5B, // 2
+    0x4F, // 3
+    0x66, // 4
+    0x6D, // 5
+    0x7D, // 6
+    0x07, // 7
+    0x7F, // 8
+    0x6F  // 9
+};
 
+// Định nghĩa các chân GPIO để điều khiển từng đoạn của LED
+#define SEG_0 GPIO_PIN_0
+#define SEG_1 GPIO_PIN_1
+#define SEG_2 GPIO_PIN_2
+#define SEG_3 GPIO_PIN_3
+#define SEG_4 GPIO_PIN_4
+#define SEG_5 GPIO_PIN_5
+#define SEG_6 GPIO_PIN_6
+
+void displayNumber(uint8_t num, uint8_t display) {
+    uint8_t segment_value;
+
+    if (num > 9) return;  // Giới hạn số hiển thị từ 0 đến 9
+
+    segment_value = segments[num];
+
+    // Cấu hình các đoạn 0-6 dựa trên giá trị số được chọn
+    if (display == 1) {
+        HAL_GPIO_WritePin(GPIOB, SEG_0, (segment_value & 0x01) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_1, (segment_value & 0x02) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_2, (segment_value & 0x04) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_3, (segment_value & 0x08) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_4, (segment_value & 0x10) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_5, (segment_value & 0x20) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOB, SEG_6, (segment_value & 0x40) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    } else if (display == 2) {
+        HAL_GPIO_WritePin(GPIOC, SEG_0, (segment_value & 0x01) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_1, (segment_value & 0x02) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_2, (segment_value & 0x04) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_3, (segment_value & 0x08) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_4, (segment_value & 0x10) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_5, (segment_value & 0x20) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, SEG_6, (segment_value & 0x40) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -228,7 +275,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM2)
+    {
+        // Thay đổi giữa hiển thị 1 và 2
+        if (display_flag == 0) {
+            displayNumber(1, 1);  // Hiển thị số 1 trên LED thứ nhất
+            display_flag = 1;
+        } else {
+            displayNumber(2, 2);  // Hiển thị số 2 trên LED thứ hai
+            display_flag = 0;
+        }
+    }
+}
 /* USER CODE END 4 */
 
 /**
