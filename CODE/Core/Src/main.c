@@ -43,13 +43,16 @@
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t displayIndex = 0;
+uint8_t ledState = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+void displayNumber(uint8_t num, uint8_t display);
+void toggleLEDs(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -90,7 +93,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -228,7 +231,56 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void displayNumber(uint8_t num, uint8_t display)
+{
+  // Turn off all segments
+  HAL_GPIO_WritePin(GPIOB, SEG_0_Pin|SEG_1_Pin|SEG_2_Pin|SEG_3_Pin|
+                           SEG_4_Pin|SEG_5_Pin|SEG_6_Pin, GPIO_PIN_RESET);
 
+  // Enable selected display
+  HAL_GPIO_WritePin(GPIOA, EN0_Pin, (display == 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, EN1_Pin, (display == 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
+  // Set segments based on the number (assuming common cathode configuration)
+  switch (num)
+  {
+    case 0: HAL_GPIO_WritePin(GPIOB, SEG_0_Pin|SEG_1_Pin|SEG_2_Pin|SEG_3_Pin|SEG_4_Pin|SEG_5_Pin, GPIO_PIN_SET); break;
+    case 3: HAL_GPIO_WritePin(GPIOB, SEG_0_Pin|SEG_1_Pin|SEG_2_Pin|SEG_3_Pin|SEG_6_Pin, GPIO_PIN_SET); break;
+    // Add other numbers if needed
+  }
+}
+
+void toggleLEDs(void)
+{
+  ledState = !ledState;
+  HAL_GPIO_WritePin(GPIOA, LED_RED_Pin, ledState ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  static uint16_t counter = 0;
+
+  if (htim->Instance == TIM2)
+  {
+    // Alternate between display 3 and display 0 every 500ms
+    if (counter % 2 == 0)
+    {
+      displayNumber(3, 1); // Display 3 on the first display
+    }
+    else
+    {
+      displayNumber(0, 2); // Display 0 on the second display
+    }
+
+    // Toggle LEDs every second
+    if (counter >= 2)
+    {
+      toggleLEDs();
+      counter = 0;
+    }
+    counter++;
+  }
+}
 /* USER CODE END 4 */
 
 /**
